@@ -1,0 +1,186 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+    @model PriceToWords.Models.PriceViewModel
+
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Convert numbered price to text.</p>
+</div>
+
+<div class="container mb-3">
+    <div class="row">
+        <form class="col-12 mb-2" onsubmit="return false;">
+            @Html.ValidationSummary(true, "", new { @class = "form-text" })
+            <div class="form-group">
+                @*@Html.LabelFor(l => l.UserName)*@
+                @*<input type="number" maxlength="" />*@
+                @Html.EditorFor(e => e.Price, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off", @placeholder = "Enter number here..." } })
+                @Html.ValidationMessageFor(m => m.Price, "", new { @class = "form-text red" })
+                <small class="form-text text-muted">Min -$2, 147, 483, 647.99 | Max $2, 147, 483, 647.99</small>
+            </div>
+        </form>
+
+        <div class="card col-12" style="min-height:102px;">
+            <div class="card-body">
+                <h5 class="card-title">
+                    Price As Text
+                    <button class="btn btn-outline-primary btn-sm float-right" onclick="CopyToClipboard();" title="Copy words to clip board">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+                            <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z" />
+                            <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z" />
+                        </svg>
+                    </button>
+
+                </h5>
+                <p id="PriceAsText" class="card-text">
+                    @if (Model != null && Model.PriceAsText != "")
+                    {
+                        <span>@Model.PriceAsText</span>
+                    }
+                    else
+                    {
+                        <span>Type a number in textbox above or select from below.</span>
+                    }
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+<div class="container bold">
+    <div class="row">
+        <div class="col-4">
+            <button class="btn btn-primary col m-1" onclick="AddToInput('1')">1</button>
+        </div>
+        <div class="col-4">
+            <button class="btn btn-primary col m-1" onclick="AddToInput('2')">2</button>
+        </div>
+        <div class="col-4">
+            <button class="btn btn-primary col m-1" onclick="AddToInput('3')">3</button>
+        </div>
+    </div>
+    <div class="row">
+
+        <div class="col-4">
+            <button class="btn btn-primary col m-1" onclick="AddToInput('4')">4</button>
+        </div>
+
+        <div class="col-4">
+            <button class="btn btn-primary col m-1" onclick="AddToInput('5')">5</button>
+        </div>
+        <div class="col-4">
+            <button class="btn btn-primary col m-1" onclick="AddToInput('6')">6</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-4">
+            <button class="btn btn-primary col m-1" onclick="AddToInput('7')">7</button>
+        </div>
+        <div class="col-4">
+            <button class="btn btn-primary col m-1" onclick="AddToInput('8')">8</button>
+        </div>
+        <div class="col-4">
+            <button class="btn btn-primary col m-1" onclick="AddToInput('9')">9</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-2 mx-auto" title="Negative">
+            <button class="btn btn-primary col m-1" onclick="AddToInput('-')">-</button>
+        </div>
+        <div class="col-2 mx-auto" title="Decimal">
+            <button class="btn btn-primary col m-1" onclick="AddToInput('.')">.</button>
+        </div>
+        <div class="col-4 mx-auto">
+            <button class="btn btn-primary col m-1" onclick="AddToInput('0')">0</button>
+        </div>
+        <div class="col-2 mx-auto" title="Delete">
+            <button class="btn btn-primary col m-1" onclick="BackSpace()">DEL</button>
+        </div>
+        <div class="col-2 mx-auto" title="Clear input">
+            <button class="btn btn-primary col m-1" onclick="Clear()">CLR</button>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<script>
+
+    var convertPriceToText;
+    var priceInput = $('#Price');
+
+
+    $("#Price").keyup(function () {
+        price = $("#Price").val();
+        ConvertPrice(price);
+    });
+
+    function CheckValidInput(val) {
+        if (isNaN(val) && val != "." && val != '-') {
+            $('#PriceAsText').text("Number is not a valid price to convert.");
+            return false;
+        } else if (!val) {
+            $('#PriceAsText').text("Type a number in textbox above or select from below.");
+            return false;
+        }
+        return true;
+    }
+
+    function ConvertPrice(price) {
+        let isValid = CheckValidInput(price);
+        if (!isValid)
+            return false;
+        if (price == "-") {
+            $("#Price").append("-");
+        }
+        //$('#PriceAsText').empty();
+
+        convertPriceToText = $.ajax({
+            method: "POST",
+            url: "/Home/ConvertPriceToText/",
+            data: { price },
+            success: function (result) {
+                $('#PriceAsText').text(result);
+            },
+            beforeSend: function (result) {
+                if (convertPriceToText != null) convertPriceToText.abort();
+            }
+        });
+    }
+
+    function Clear() {
+        $('#Price').val("");
+        $('#PriceAsText').text("Type a number in textbox above or select from below.");
+    }
+
+    function BackSpace() {
+        let newValue = priceInput.val().slice(0, -1);
+        priceInput.val(newValue);
+        ConvertPrice(newValue);
+    }
+
+    function AddToInput(val) {
+        var isValid = CheckValidInput(val);
+        if (isValid) {
+            priceInput.val(priceInput.val() + val);
+            ConvertPrice(priceInput.val());
+        }
+    }
+
+    function CopyToClipboard() {
+        console.log("( " + $("#Price").val()+ " )");
+        if ($("#Price").val()) {
+            var textToCopy = $('#PriceAsText').text();
+            navigator.clipboard.writeText(textToCopy);
+            alert("\"" + textToCopy + "\" copied to clipboard.");
+        } else {
+            alert("There is nothing to copy.");
+        }
+    }
+
+</script>
